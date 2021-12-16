@@ -11,7 +11,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
 
-
 def open_json():
     df_0 = pd.read_json("StreamingHistory0.json")
     df_1 = pd.read_json("StreamingHistory1.json")
@@ -23,6 +22,7 @@ def open_json():
     streaming_df = pd.concat([df_0, df_1, df_2, df_3, df_4, df_5], ignore_index=True)
 
     return streaming_df
+#Reads in the json files and combines them
 
 def ms_to_s(streaming_df):
     ms_ser = streaming_df["msPlayed"]
@@ -30,7 +30,7 @@ def ms_to_s(streaming_df):
     streaming_df["sPlayed"] = s_ser
 
     return streaming_df
-
+# coverts msPlayed to sPlayed
 def split_string(streaming_df):
     end_str = streaming_df["endTime"]
     new_ser = end_str.str.split(expand=True)
@@ -39,7 +39,7 @@ def split_string(streaming_df):
     
     return streaming_df
 
-
+# Splits endTime column into time and dat columns
 def add_day_col(streaming_df):
     date_ser = pd.Series(streaming_df["date"])
     new_date_ser = pd.Series()
@@ -49,6 +49,7 @@ def add_day_col(streaming_df):
     new_date_ser_2 = new_date_ser.dt.day_name()
     streaming_df["Day_of_Week"] = new_date_ser_2
     return streaming_df, new_date_ser_2
+# Adds day of the week column
 
 def pool_time(streaming_df):
     s_ser = streaming_df["sPlayed"]
@@ -59,6 +60,7 @@ def pool_time(streaming_df):
     hours = minutes / 60
     days = hours / 24
     print("Total Seconds:", total_sec, "Total minutes:", minutes, "Total hours:", hours, "Total days:", days)
+#Pools all the time data and returns it in typical time values.
 
 def aggregate_data(streaming_df):
     week_ser = pd.Series()
@@ -128,6 +130,7 @@ def aggregate_data(streaming_df):
     #print(time_ser)
 
     return(week_ser, Day_ser, weekend_ser, weekday_ser, streaming_df, time_ser)
+# Combines weekday and weekend seconds of music listen to amd makes new dataframes
 
 def make_chart(week_ser, day_ser):
     plt.figure()
@@ -198,6 +201,7 @@ def make_sep_df(streaming_df):
     rows2 = streaming_df.loc[condition2, :]
     sunday_df = sunday_df.append(rows2, ignore_index=False)
     return week_df, wend_df, monday_df, tuesday_df, wednesday_df, thursday_df, friday_df, saturday_df, sunday_df
+# Makes dataframes for each day of the week, and then all weekdays and weekends
 
 def pool_by_day(streaming_df, name):
     days_ser = pd.DataFrame()
@@ -224,7 +228,7 @@ def pool_by_day(streaming_df, name):
     days_ser_2["Weekdays"] = weekday_ser
 
     return days_ser_2
-
+#Combines the values for each day and sums 
 def make_chart_3(days_ser_2):
     day_ser = days_ser_2["date"]
     time_ser = days_ser_2["sPlayed"]
@@ -235,7 +239,7 @@ def make_chart_3(days_ser_2):
     plt.title("Number of Seconds of Music Listened to by day")
     plt.xticks([])
     plt.savefig("days.png")
-
+# Makes chart with total seconds of music listened to by day
 def seperate_time_data(streaming_df):
     time_ser = streaming_df["endTime"]
     placeholder = []
@@ -263,7 +267,7 @@ def seperate_time_data(streaming_df):
     streaming_df["time_index"] = time_ser_4
     
     return streaming_df
-
+# Gives time indicator for splitting each of the time sections into dataframes
 
 def split_time(streaming_df):
     one_df = pd.DataFrame(columns=streaming_df.columns)
@@ -356,6 +360,7 @@ def split_time(streaming_df):
     new_time_ser["4pm to 8pm"] = one
     new_time_ser["8pm to 12pm"] = two
     return one_ser, two_ser, three_ser, four_ser, five_ser, six_ser, new_time_ser, Day_ser_2
+# Splits into different time intervals and makes a new dataframe with the values
 
 def make_chart_4(new_time_ser, day_ser_2):
     plt.figure()
@@ -365,6 +370,7 @@ def make_chart_4(new_time_ser, day_ser_2):
     plt.title("Number of Seconds of Music Listened to by Time")
     plt.xticks(rotation=45)
     plt.savefig("times.png")
+# Makes bar chart by time of day
 
 def days_ttest(monday_df, tuesday_df, wednesday_df, friday_df, saturday_df, sunday_df):
     monday_ser = monday_df["sPlayed"]
@@ -383,7 +389,7 @@ def days_ttest(monday_df, tuesday_df, wednesday_df, friday_df, saturday_df, sund
     print("t for Tuesday vs Saturday:", t1, "p:", p1)
     print("t for Monday vs Friday:", t2, "p:", p2)
     print("t for Wednesday vs Sunday:", t3, "p:", p3)
-
+# Runs a series of t test to determine if there is a difference in the amount of time I spend listening to music by weekday
 def weekday_ttest(week_df, wend_df):
     week_ser = week_df["sPlayed"]
     wend_ser = wend_df["sPlayed"]
@@ -391,11 +397,13 @@ def weekday_ttest(week_df, wend_df):
     t1, p1 = stats.ttest_ind(week_ser, wend_ser)
 
     print("t:", t1, "p:", p1)
+# Runs ttest to see if there is a difference in the amount of music listened to in weekdays vs weekends
 
 def drop_rows(streaming_df):
     streaming_df = streaming_df.drop(columns=["trackName", "artistName"])
 
     return streaming_df
+# Drops track and artist names from dataframe
 
 def time_ttest(one_ser, two_ser, three_ser, four_ser, five_ser, six_ser):
 
@@ -408,6 +416,7 @@ def time_ttest(one_ser, two_ser, three_ser, four_ser, five_ser, six_ser):
     print("t for 12-4:", t1, "p:", p1)
     print("t for 4-8:", t2, "p:", p2)
     print("t for 8-12:", t3, "p:", p3)
+#runs the set of t tests to determine if there is a difference between the am and pm time slots
 
 def kNN_class(streaming_df, num):
     
@@ -426,6 +435,7 @@ def kNN_class(streaming_df, num):
 
     accuracy = accuracy_score(y_test, y_predicted)
     print("Accuracy:", accuracy)
+# Runs kNN classifier for whether the year is 2020 or 2021
 
 def seperate_dates(streaming_df):
     date_ser = streaming_df["date"]
@@ -437,7 +447,7 @@ def seperate_dates(streaming_df):
     streaming_df["month"] = month_ser
 
     return streaming_df
-
+# Seperates the dat into days, months, and years and puts months and years into the dataframe
 
 def make_warm_cold(streaming_df):
     month_ser = streaming_df["month"]
@@ -452,6 +462,7 @@ def make_warm_cold(streaming_df):
     streaming_df["heat"] = heat_ser
 
     return streaming_df
+# Adds whether the month was a warm or cold month
 
 def clean_months(streaming_df):
     month_ser = streaming_df["month"]
@@ -486,12 +497,7 @@ def clean_months(streaming_df):
     streaming_df["month"] = new_month_ser
 
     return streaming_df
-
-def make_matrix(streaming_df):
-    rest_df  = streaming_df.drop(columns=["msPlayed", "Day_of_Week", "date"])
-    corr_df = rest_df.corr()
-    print(corr_df.style.background_gradient(cmap='bwr').set_precision(2))
-
+# Turns months value into numeric instead of string
 
 def convert_numeric(streaming_df):
     days_ser = streaming_df["Day_of_Week"]
@@ -535,7 +541,7 @@ def convert_numeric(streaming_df):
     streaming_df["Weekdays"] = new_week_ser
 
     return streaming_df
-
+# Coverts any catagorical data that I am using in the classifiers to numeric values
 
 def tree_classifier(streaming_df):
     clf = DecisionTreeClassifier(random_state=0,max_depth=3)  
@@ -552,30 +558,4 @@ def tree_classifier(streaming_df):
     plt.figure(figsize=(30, 30)) # Resize figure
     plot_tree(clf, feature_names=x_train.columns, class_names={1: "2020", 0: "2021"}, filled=True)
     plt.show()
-
-
-
-
-def normalize_week_data(week_df, wend_df):
-    week_day_ser = week_df["Day_of_Week"]
-    week_date_ser  = week_df["date"]
-    week_time_ser = week_df["sPlayed"]
-    weekend_day_ser = wend_df["Day_of_Week"]
-    weekend_date_ser  = wend_df["date"]
-    weekend_time_ser = wend_df["sPlayed"]
-    placeholder = []
-    placeholder1 = []
-
-    week_number = week_date_ser['date'].dt.week
-    weekend_num = weekend_date_ser['date'].dt.week
-    
-    for i in range(len(week_number)):
-        weekday = 0
-
-        weekday = weekday / 5
-        weekend = weekend / 2
-        placeholder.append(weekday)
-        placeholder1.append(weekend)
-    weekday_ser = pd.Series(placeholder)
-    weekend_ser = pd.Series(placeholder1)
-    return weekday_ser, weekend_ser
+# Runs a decision tree classifier for whether it is 2020 or 2021
